@@ -1,111 +1,176 @@
-# Pizza API Challenge
+Pizza Restaurant API
+This is a RESTful API for a Pizza Restaurant built using Flask, following the MVC pattern. It manages Restaurants, Pizzas, and RestaurantPizzas with appropriate validations and relationships.
+Setup Instructions
 
-This is a Flask-based RESTful API for managing restaurants, pizzas, and their associations, built using the MVC (Model-View-Controller) pattern.
+Create and Activate Virtual Environment:
+pipenv install flask flask_sqlalchemy flask_migrate
+pipenv shell
 
-## Setup Instructions
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/your-username/pizza-api-challenge.git
-   cd pizza-api-challenge
 
-2. **Set Up Virtual Environment: Install dependencies using pipenv:
-#pipenv install flask flask_sqlalchemy flask_migrate
-#pipenv shell
+Set Flask Environment Variable:
+export FLASK_APP=server/app.py
 
-3. Set Flask Environment Variable:
-#export FLASK_APP=server/app.py
 
-4. DB Migration & Seeding Instructions
-#flask db init
-#flask db migrate -m "Initial migration"
-#flask db upgrade
+Initialize Database:
+flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
 
-5. Seed the Database: Populate the database with initial data:
-#python server/seed.py
 
-6. Run the Application: Start the Flask server:
-#python server/app.py
+Seed Database:
+python server/seed.py
+
+
+
+Database Migration & Seeding
+
+Migrations: Managed using Flask-Migrate. Run flask db migrate to create migrations and flask db upgrade to apply them.
+Seeding: The seed.py file populates the database with sample data for Restaurants, Pizzas, and RestaurantPizzas. Run python server/seed.py to seed.
 
 Route Summary
 
--GET /restaurants: Retrieve a list of all restaurants.
--GET /restaurants/<id></id>: Retrieve details of a specific restaurant, including its associated pizzas.
--DELETE /restaurants/<id></id>: Delete a restaurant and its associated RestaurantPizza entries.
--GET /pizzas: Retrieve a list of all pizzas.
--POST /restaurant_pizzas: Create a new RestaurantPizza association between a restaurant and a pizza.
+
+
+Method
+Endpoint
+Description
+
+
+
+GET
+/restaurants
+List all restaurants
+
+
+GET
+/restaurants/<int:id>
+Get details of a restaurant and its pizzas
+
+
+DELETE
+/restaurants/<int:id>
+Delete a restaurant and its RestaurantPizzas
+
+
+GET
+/pizzas
+List all pizzas
+
+
+POST
+/restaurant_pizzas
+Create a new RestaurantPizza
+
 
 Example Requests & Responses
--GET /restaurants
-1. Request:
-GET http://localhost:5000/restaurants
-Response (200 OK):
-json
+GET /restaurants
+Response (200):
 [
-    {
-        "id": 1,
-        "name": "Kiki's Pizza",
-        "address": "123 Main St",
-        "pizzas": [
-            {
-                "id": 1,
-                "name": "Margherita",
-                "ingredients": "Dough, Tomato Sauce, Cheese, Basil"
-            },
-            {
-                "id": 2,
-                "name": "Pepperoni",
-                "ingredients": "Dough, Tomato Sauce, Cheese, Pepperoni"
-            }
-        ]
-    },
-    {
-        "id": 2,
-        "name": "Pizza Palace",
-        "address": "456 Oak Ave",
-        "pizzas": [
-            {
-                "id": 1,
-                "name": "Margherita",
-                "ingredients": "Dough, Tomato Sauce, Cheese, Basil"
-            }
-        ]
-    }
+  {
+    "id": 1,
+    "name": "Dominos",
+    "address": "123 Main St"
+  },
+  ...
 ]
 
-2. GET /pizzas
+GET /restaurants/int:id
+Success Response (200):
+{
+  "id": 1,
+  "name": "Dominos",
+  "address": "123 Main St",
+  "pizzas": [
+    {
+      "id": 1,
+      "name": "Margherita",
+      "ingredients": "Dough, Tomato Sauce, Cheese"
+    },
+    ...
+  ]
+}
+
+Error Response (404):
+{ "error": "Restaurant not found" }
+
+DELETE /restaurants/int:id
+Success Response (204): No content Error Response (404):
+{ "error": "Restaurant not found" }
+
+GET /pizzas
+Response (200):
+[
+  {
+    "id": 1,
+    "name": "Margherita",
+    "ingredients": "Dough, Tomato Sauce, Cheese"
+  },
+  ...
+]
+
+POST /restaurant_pizzas
 Request:
-GET http://localhost:5000/pizzas
-json
+{
+  "price": 5,
+  "pizza_id": 1,
+  "restaurant_id": 3
+}
 
-[
-    {
-        "id": 1,
-        "name": "Margherita",
-        "ingredients": "Dough, Tomato Sauce, Cheese, Basil"
-    },
-    {
-        "id": 2,
-        "name": "Pepperoni",
-        "ingredients": "Dough, Tomato Sauce, Cheese, Pepperoni"
-    }
-]
+Success Response (201):
+{
+  "id": 4,
+  "price": 5,
+  "pizza_id": 1,
+  "restaurant_id": 3,
+  "pizza": {
+    "id": 1,
+    "name": "Margherita",
+    "ingredients": "Dough, Tomato Sauce, Cheese"
+  },
+  "restaurant": {
+    "id": 3,
+    "name": "Kiki's Pizza",
+    "address": "456 Oak St"
+  }
+}
 
-#Validation Rules
+Error Response (400):
+{ "errors": ["Price must be between 1 and 30"] }
 
--RestaurantPizza.price: Must be an integer between 1 and 30 (inclusive).
--RestaurantPizza creation: Both restaurant_id and pizza_id must correspond to existing Restaurant and Pizza records.
--Cascading Deletes: Deleting a Restaurant automatically deletes its associated RestaurantPizza entries.
+Validation Rules
 
-#Postman Usage Instructions
+RestaurantPizza:
+price: Must be an integer between 1 and 30.
+pizza_id: Must reference an existing Pizza.
+restaurant_id: Must reference an existing Restaurant.
 
--Open Postman.
--Click Import in the top-left corner.
--Upload the challenge-1-pizzas.postman_collection.json file located in the project root.
--Use the imported collection to test all API endpoints:
--GET /restaurants
--GET /restaurants/<id></id>
--DELETE /restaurants/<id></id>
--GET /pizzas
--POST /restaurant_pizzas
--Ensure the Flask server is running (python server/app.py) before sending requests.
--Verify responses match the expected formats and status codes as described above.
+
+
+Postman Usage Instructions
+
+Open Postman.
+Click Import → Upload challenge-1-pizzas.postman_collection.json.
+Run the requests in the collection to test each endpoint.
+Verify responses match the expected formats above.
+
+Project Structure
+.
+├── server/
+│   ├── __init__.py
+│   ├── app.py
+│   ├── config.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── restaurant.py
+│   │   ├── pizza.py
+│   │   ├── restaurant_pizza.py
+│   ├── controllers/
+│   │   ├── __init__.py
+│   │   ├── restaurant_controller.py
+│   │   ├── pizza_controller.py
+│   │   ├── restaurant_pizza_controller.py
+│   ├── seed.py
+├── migrations/
+├── challenge-1-pizzas.postman_collection.json
+└── README.md
+

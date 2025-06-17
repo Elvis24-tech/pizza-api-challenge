@@ -1,31 +1,46 @@
-from flask import request, jsonify
-from server.config import app, db
-from server.models.restaurant_pizza import RestaurantPizza
-from server.models.restaurant import Restaurant
-from server.models.pizza import Pizza
 
-@app.route('/restaurant_pizzas', methods=['POST'])
+from flask import Blueprint, request, jsonify
+from server.models.restaurant_pizza import RestaurantPizza
+from server.models.pizza import Pizza
+from server.models.restaurant import Restaurant
+from server.config import db
+
+restaurant_pizza_bp = Blueprint('restaurant_pizza_bp', __name__)
+
+@restaurant_pizza_bp.route('/restaurant_pizzas', methods=['POST'])
 def create_restaurant_pizza():
     data = request.get_json()
+    if not data:
+        return jsonify({ "error": "No JSON received or invalid format." }), 400
     
     try:
-        # Validate restaurant and pizza exist
-        restaurant = Restaurant.query.get(data['restaurant_id'])
-        pizza = Pizza.query.get(data['pizza_id'])
-        
-        if not restaurant or not pizza:
-            return jsonify({'error': 'Restaurant or Pizza not found'}), 404
-            
-        restaurant_pizza = RestaurantPizza(
-            price=data['price'],
-            restaurant_id=data['restaurant_id'],
-            pizza_id=data['pizza_id']
-        )
-        
-        db.session.add(restaurant_pizza)
+        price = int(data.get('price'))
+        pizza_id = int(data.get('pizza_id'))
+        restaurant_id = int(data.get('restaurant_id'))
+
+        new_rp = RestaurantPizza(price=price, pizza_id=pizza_id, restaurant_id=restaurant_id)
+        db.session.add(new_rp)
         db.session.commit()
-        
-        return jsonify(restaurant_pizza.to_dict())
-        
-    except ValueError as e:
-        return jsonify({'errors': [str(e)]}), 400
+
+        return jsonify({
+            "id": new_rp.id,
+            "price": new_rp.price,
+            "pizza_id": new_rp.pizza_id,
+            "restaurant_id": new_rp.restaurant_id,
+            "pizza": {
+                "id": new_rp.pizza.id,
+                "name": new_rp.pizza.name,
+                "ingredients": new_rp.pizza.ingredients
+            },
+            "restaurant": {
+                "id": new_rp.restaurant.id,
+                "name":new_rp.restaurant.name,
+                "address": new_rp.restaurant.address
+            }
+        }), 201
+    except ValueError as ve:
+        return jsonify({ "errors": [str(ve)]}), 400
+    
+    except Exception as e:
+        return jsonify({ "errors": ["Invalid data"]}), 400
+    

@@ -1,3 +1,3 @@
-class Config:
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///pizza_restaurant.db'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()

@@ -1,33 +1,35 @@
-from server.config import db, app
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from server.config import db
 from server.models.restaurant import Restaurant
 from server.models.pizza import Pizza
 from server.models.restaurant_pizza import RestaurantPizza
+from server.app import app  
 
-def seed_data():
-    with app.app_context():
-        # Clear existing data
-        db.drop_all()
-        db.create_all()
-        
-        # Create Restaurants
-        r1 = Restaurant(name="Kiki's Pizza", address="123 Main St")
-        r2 = Restaurant(name="Pizza Palace", address="456 Oak Ave")
-        
-        # Create Pizzas
-        p1 = Pizza(name="Margherita", ingredients="Dough, Tomato Sauce, Cheese, Basil")
-        p2 = Pizza(name="Pepperoni", ingredients="Dough, Tomato Sauce, Cheese, Pepperoni")
-        
-        # Add to session
-        db.session.add_all([r1, r2, p1, p2])
-        db.session.commit()
-        
-        # Create RestaurantPizzas
-        rp1 = RestaurantPizza(price=10, restaurant_id=r1.id, pizza_id=p1.id)
-        rp2 = RestaurantPizza(price=12, restaurant_id=r1.id, pizza_id=p2.id)
-        rp3 = RestaurantPizza(price=15, restaurant_id=r2.id, pizza_id=p1.id)
-        
-        db.session.add_all([rp1, rp2, rp3])
-        db.session.commit()
+with app.app_context():
+    print("🌱 Seeding data...")
 
-if __name__ == '__main__':
-    seed_data()
+    RestaurantPizza.query.delete()
+    Restaurant.query.delete()
+    Pizza.query.delete()
+
+    pepperoni = Pizza(name="Pepperoni", ingredients="Cheese, Tomato, Pepperoni")
+    veggie = Pizza(name="Veggie", ingredients="Cheese, Tomato, Peppers, Onions, Olives")
+    bbq = Pizza(name="BBQ Chicken", ingredients="Chicken, BBQ Sauce, Cheese")
+
+    mama_mias = Restaurant(name="Mama Mia's", address="123 Main Street")
+    pizza_palace = Restaurant(name="Pizza Palace", address="456 Broadway Ave")
+
+    db.session.add_all([pepperoni, veggie, bbq, mama_mias, pizza_palace])
+    db.session.commit()
+
+    rp1 = RestaurantPizza(price=12, pizza_id=pepperoni.id, restaurant_id=mama_mias.id)
+    rp2 = RestaurantPizza(price=10, pizza_id=veggie.id, restaurant_id=mama_mias.id)
+    rp3 = RestaurantPizza(price=14, pizza_id=bbq.id, restaurant_id=pizza_palace.id)
+
+    db.session.add_all([rp1, rp2, rp3])
+    db.session.commit()
+
+    print("Done seeding!")
